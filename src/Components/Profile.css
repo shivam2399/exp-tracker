@@ -1,0 +1,16 @@
+.profile-container {
+    position: relative;
+  }
+  
+  .profile-container h2 {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  
+  .profile-container p {
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
+  

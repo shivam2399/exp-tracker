@@ -1,14 +1,16 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useContext } from 'react';
 import './Signup.css'
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import AuthContext from '../Store/auth-context';
 
 
 const Signup = () => {
   const history = useNavigate();
   const emailInputRef = useRef()
-  const passwordInputRef = useRef()
+  const passwordInputRef = useRef();
 
-  
+  const authCtx = useContext(AuthContext)
+
   const [isLogin, setIsLogin] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -53,7 +55,9 @@ const Signup = () => {
     }
   })
   .then((data) => {
-    history('/')
+    authCtx.login(data.idToken)
+    authCtx.token = data.idToken
+    {isLogin ? history('/profile') : history('/')}
   })
   .catch((err) => {
     alert(err.message)
