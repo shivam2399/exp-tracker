@@ -55,6 +55,7 @@ const Signup = () => {
     }
   })
   .then((data) => {
+    localStorage.setItem('idToken', data.idToken)
     authCtx.login(data.idToken)
     authCtx.token = data.idToken
     {isLogin ? history('/profile') : history('/')}
