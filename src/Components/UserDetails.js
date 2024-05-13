@@ -109,6 +109,31 @@ const UserDetails = () => {
     }));
   };
 
+  const handleVerifyEmail = () => {
+    const url = 'https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=AIzaSyDv0l7lFr3WIeezPmxlmlpxrkYc1S-Q8rM';
+    fetch(url, {
+      method: 'POST',
+      body: JSON.stringify({
+        requestType: 'VERIFY_EMAIL',
+        idToken: authCntx.token,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+     .then((res) => {
+       if(res.ok) {
+        alert('Verification email sent successfully!');
+       } else {
+        throw new Error('Failed to send verifation email')
+       }
+     })
+     .catch((err) => {
+      console.error('Error sending verification mail', err);
+      alert('Error sending verification email', err.message)
+  })
+  }
+
   return (
     <>
       <h3>Winners never quit</h3>
@@ -146,7 +171,8 @@ const UserDetails = () => {
             />
           </div>
           <br></br>
-          <button>Update</button>
+          <button disabled={isLoading}>Update</button>
+          <button type="button" onClick={handleVerifyEmail}>Verify Email</button>
           {isLoading && <p>Loading...</p>}
         </form>
       </div>
