@@ -87,6 +87,9 @@ const Signup = () => {
             <input type="password" id='password' required ref={passwordInputRef} />
           <br />
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+            <Link to="/forgotpassword" style={{ color: '#333', textDecoration: 'none', marginRight: '20px' }}>Forgot Password</Link>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
           {!isLoading && <button>{isLogin ? 'Login' : 'Signup'}</button>}
           {isLoading && <p>Loading...</p>}
           </div>
