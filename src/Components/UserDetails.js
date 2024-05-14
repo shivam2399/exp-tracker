@@ -14,9 +14,9 @@ const UserDetails = () => {
   const [userData, setUserData] = useState({name: '', photoUrl: ''});
 
   const getUserData = () => {
-    const idToken = localStorage.getItem("idToken");
+    const idToken = localStorage.getItem("token");
     if (!idToken) {
-      alert("No idToken found in localStorage");
+      alert("Please Login");
       return;
     }
 
@@ -46,10 +46,6 @@ const UserDetails = () => {
         alert("Fetch error: " + err.message);
       });
   };
-
-  useEffect(() => {
-    getUserData();
-  }, []);
 
   const submitHandler = (e) => {
     e.preventDefault();
@@ -131,14 +127,25 @@ const UserDetails = () => {
      .catch((err) => {
       console.error('Error sending verification mail', err);
       alert('Error sending verification email', err.message)
-  })
+   })
   }
+
+  const logoutHandler = () => {
+    authCntx.logout()
+    setUserData({ name: '', photoUrl: '' });
+    
+  }
+
+  useEffect(() => {
+    getUserData();
+  }, []);
 
   return (
     <>
       <h3>Winners never quit</h3>
       <div>
         <h2>Contact Details</h2>
+        {authCntx.isLoggedIn && <button onClick={logoutHandler}>Logout</button>}
         <form onSubmit={submitHandler}>
           <div className="icon-input">
             <FontAwesomeIcon icon={faGithub} />
