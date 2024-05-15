@@ -3,10 +3,12 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGlobe } from "@fortawesome/free-solid-svg-icons";
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
 import AuthContext from "../Store/auth-context";
+import { useNavigate } from "react-router-dom";
 
 const UserDetails = () => {
   const nameRef = useRef();
   const photoRef = useRef();
+  const history = useNavigate()
 
   const authCntx = useContext(AuthContext);
 
@@ -136,6 +138,10 @@ const UserDetails = () => {
     
   }
 
+  const handleAddingExpense = () => {
+    history('/')
+  }
+
   useEffect(() => {
     getUserData();
   }, []);
@@ -183,6 +189,9 @@ const UserDetails = () => {
           {isLoading && <p>Loading...</p>}
         </form>
       </div>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+          <button onClick={handleAddingExpense}>Start adding expenses</button>
+        </div>
     </>
   );
 };
