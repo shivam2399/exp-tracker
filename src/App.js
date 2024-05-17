@@ -5,9 +5,11 @@ import Signup from './Components/Signup';
 import Profile from './Components/Profile';
 import UserDetails from './Components/UserDetails';
 import ForgotPass from './Components/ForgotPass';
+import Expenses from './Components/Expenses';
 
 const router = createBrowserRouter([
-  {path: '/', element: <Home />},
+  {path: '/', element: <Home /> },
+  {path: '/expenses', element: <Expenses />},
   {path: '/signup', element: <Signup />},
   {path: '/profile', element: <Profile />},
   {path: '/userdetails', element: <UserDetails />},

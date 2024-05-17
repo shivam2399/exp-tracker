@@ -139,7 +139,7 @@ const UserDetails = () => {
   }
 
   const handleAddingExpense = () => {
-    history('/')
+    history('/expenses')
   }
 
   useEffect(() => {
