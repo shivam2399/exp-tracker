@@ -40,8 +40,10 @@ const UserDetails = () => {
         console.log(data);
         var name = data.users[0].displayName;
         var photo = data.users[0].photoUrl;
-        console.log(name, photo);
+        var email = data.users[0].email
+        console.log(name, photo, email);
         setUserData({name, photoUrl: photo})
+        authCntx.login(idToken, email)
       })
       .catch((err) => {
         console.error("Fetch error:", err);

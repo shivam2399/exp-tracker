@@ -1,15 +1,19 @@
 import React ,{ useContext, useState, useEffect } from 'react'
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import AuthContext from '../Store/auth-context'
 
 const Expenses = () => {
   const authCtx = useContext(AuthContext)
+  const navigate = useNavigate()
   const [expenses, setExpenses] = useState([])
   const [expenseData, setExpenseData] = useState({
     amount: '',
     description: '',
     category: ''
   });
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentExpenseId, setCurrentExpenseId] = useState(null);
+  const userId = authCtx.email ? authCtx.email.replace(/[@.]/g, '') : null;
 
   const handleChange = (e) => {
     const {name, value} = e.target
@@ -20,34 +24,53 @@ const Expenses = () => {
   }
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  
-  const newExpense = { ...expenseData };
+    e.preventDefault();
+    const newExpense = { ...expenseData };
 
-  try {
-    const response = await fetch('https://expense-tracker-694de-default-rtdb.asia-southeast1.firebasedatabase.app/expenses.json', {
-      method: 'POST',
-      headers: {
+    if(!userId) {
+     console.error('User ID not available');
+     return
+    }
+
+    try {
+     const response = await fetch(`https://expense-tracker-694de-default-rtdb.asia-southeast1.firebasedatabase.app/expenses/${userId}/${isEditing ? currentExpenseId: ''}.json`, {
+       method: isEditing ? 'PUT' : 'POST',
+       headers: {
         'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(newExpense)
-    });
+       },
+       body: JSON.stringify(newExpense)
+     });
 
-    if (!response.ok) {
-      throw new Error('Failed to send expense data');
+     if (!response.ok) {
+      throw new Error(`Failed to ${isEditing ? 'update' : 'send'} expense data`);
     }
 
     const data = await response.json();
-    setExpenses((prevExpenses) => [...prevExpenses, { ...newExpense, id: data.name }]);
+    if (isEditing) {
+      setExpenses((prevExpenses) =>
+        prevExpenses.map((expense) =>
+          expense.id === currentExpenseId ? { ...newExpense, id: currentExpenseId } : expense
+        )
+      );
+    } else {
+      setExpenses((prevExpenses) => [...prevExpenses, { ...newExpense, id: data.name }]);
+    }
     setExpenseData({ amount: '', description: '', category: '' });
+    setIsEditing(false);
+    setCurrentExpenseId(null);
   } catch (error) {
     console.error('Error:', error);
   }
 };
 
 const fetchExpenses = async () => {
+  if (!userId) {
+    console.error('User ID is not available');
+    return;
+  }
+
     try {
-      const response = await fetch('https://expense-tracker-694de-default-rtdb.asia-southeast1.firebasedatabase.app/expenses.json');
+      const response = await fetch(`https://expense-tracker-694de-default-rtdb.asia-southeast1.firebasedatabase.app/expenses/${userId}.json`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch expenses');
@@ -71,19 +94,46 @@ const fetchExpenses = async () => {
     }
   };
 
+  const handleEdit = (expense) => {
+    setExpenseData({
+      amount: expense.amount,
+      description: expense.description,
+      category: expense.category
+    })
+    setIsEditing(true);
+    setCurrentExpenseId(expense.id)
+  }
+
+  const handleDelete = async (expenseId) => {
+    try {
+      const response = await fetch(`https://expense-tracker-694de-default-rtdb.asia-southeast1.firebasedatabase.app/expenses/${userId}/${expenseId}.json`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete expense');
+      }
+
+      setExpenses((prevExpenses) => prevExpenses.filter((expense) => expense.id !== expenseId));
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
   useEffect(() => {
     fetchExpenses();
-  }, []);
+  }, [userId]);
 
    
   const handleLogout = () => {
     authCtx.logout()
+    navigate('/')
   }
 
 
   return (
     <>
-     <nav style={{ backgroundColor: '#333', color: '#fff', padding: '10px 20px', display: 'flex', justifyContent: 'space-between' }}>
+      <nav style={{ backgroundColor: '#333', color: '#fff', padding: '10px 20px', display: 'flex', justifyContent: 'space-between' }}>
         <div>
           <h1 style={{ height: '40px', marginRight: '20px' }}>Expense Tracker</h1>
           <Link to="/" style={{ color: '#fff', textDecoration: 'none', marginRight: '20px' }}>Home</Link>
@@ -95,7 +145,7 @@ const fetchExpenses = async () => {
         </div>
       </nav>
       <div style={{ margin: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <h2>Add Expense</h2>
+        <h2>{isEditing ? 'Edit Expense' : 'Add Expense'}</h2>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center' }}>
             <label htmlFor="amount" style={{ marginRight: '10px' }}>Amount:</label>
@@ -115,26 +165,28 @@ const fetchExpenses = async () => {
               <option value="Utilities">Utilities</option>
             </select>
           </div>
-          <button type="submit">Add Expense</button>
+          <button type="submit">{isEditing ? 'Update Expense' : 'Add Expense'}</button>
         </form>
       </div>
-        <div>
-          <ul style={{ listStyleType: 'none', padding: 0 }}>
-             {expenses.map((expense, index) => (
-             <li key={index} style={{ marginBottom: '15px', padding: '20px', border: '1px solid #e0e0e0', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
+      <div>
+        <ul style={{ listStyleType: 'none', padding: 0 }}>
+          {expenses.map((expense) => (
+            <li key={expense.id} style={{ marginBottom: '15px', padding: '20px', border: '1px solid #e0e0e0', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
               <div style={{ marginBottom: '10px' }}>
-               <strong>Amount:</strong> {expense.amount}
+                <strong>Amount:</strong> {expense.amount}
               </div>
               <div style={{ marginBottom: '10px' }}>
-               <strong>Description:</strong> {expense.description}
+                <strong>Description:</strong> {expense.description}
               </div>
               <div>
-               <strong>Category:</strong> {expense.category}
+                <strong>Category:</strong> {expense.category}
               </div>
-             </li>
-           ))}
-          </ul>
-        </div>
+              <button onClick={() => handleEdit(expense)}>Edit</button>
+              <button onClick={() => handleDelete(expense.id)}>Delete</button>
+            </li>
+          ))}
+        </ul>
+      </div>
     </>
 
   )
