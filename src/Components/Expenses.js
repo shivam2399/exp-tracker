@@ -1,7 +1,10 @@
 import React ,{ useState, useEffect, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { authActions } from '../Store/auth';
+import { authActions } from '../Store/auth'
+import { themeActions } from '../Store/theme';
+import './Expenses.css';
+
 
 
 const Expenses = () => {
@@ -16,6 +19,7 @@ const Expenses = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentExpenseId, setCurrentExpenseId] = useState(null);
   const userId = useSelector(state => state.auth.email)?.replace(/[.@]/g, '');
+  const isDarkTheme = useSelector(state => state.theme.isDarkTheme)
 
 
   const handleChange = (e) => {
@@ -127,7 +131,7 @@ const fetchExpenses = async () => {
     if (userId) {
       fetchExpenses();
     }
-  }, [userId]);
+  }, []);
 
    
   const handleLogout = () => {
@@ -141,36 +145,66 @@ const fetchExpenses = async () => {
 
   const handleActivatePremium = () => {
     alert('Premium Activated!');
+    dispatch(themeActions.setDarkTheme())
   };
+
+  const toggleTheme = () => {
+    dispatch(themeActions.toggleTheme())
+  }
+
+  const exportToCSV = () => {
+    const csvRows = [
+      ['Amount', 'Description', 'Category'],
+      ...expenses.map(expense => [expense.amount, expense.description, expense.category])
+    ];
+
+    const csvContent = csvRows.map(e => e.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+
+    link.href = url;
+    link.setAttribute('download', 'expenses.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
 
 
   return (
     <>
-      <nav style={{ backgroundColor: '#333', color: '#fff', padding: '10px 20px', display: 'flex', justifyContent: 'space-between' }}>
+      <nav className="navbar">
         <div>
-          <h1 style={{ height: '40px', marginRight: '20px' }}>Expense Tracker</h1>
-          <Link to="/" style={{ color: '#fff', textDecoration: 'none', marginRight: '20px' }}>Home</Link>
-          <Link to="/" style={{ color: '#fff', textDecoration: 'none', marginRight: '20px' }}>About Us</Link>
-          <Link to="/expenses" style={{ color: '#fff', textDecoration: 'none', marginRight: '20px' }}>Expenses</Link>
+          <h1>Expense Tracker</h1>
+          <Link to="/">Home</Link>
+          <Link to="/">About Us</Link>
+          <Link to="/expenses">Expenses</Link>
         </div>
         <div>
+        {totalAmount >= 10000 && (
+            <button className="button" onClick={toggleTheme}>
+              {isDarkTheme ? 'Light Mode' : 'Dark Mode'}
+            </button>
+          )}
           <button onClick={handleLogout}>Log out</button>
         </div>
       </nav>
-      <div style={{ margin: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div className={`container ${isDarkTheme ? 'dark-theme' : 'light-theme'}`}>
         <h2>{isEditing ? 'Edit Expense' : 'Add Expense'}</h2>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center' }}>
-            <label htmlFor="amount" style={{ marginRight: '10px' }}>Amount:</label>
-            <input type="text" id="amount" name="amount" value={expenseData.amount} onChange={handleChange} style={{ marginRight: '10px' }} />
+        <form onSubmit={handleSubmit} className="form">
+          <div className="form-group">
+            <label htmlFor="amount">Amount:</label>
+            <input type="text" id="amount" name="amount" value={expenseData.amount} onChange={handleChange} />
           </div>
-          <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center' }}>
-            <label htmlFor="description" style={{ marginRight: '10px' }}>Description:</label>
-            <input type="text" id="description" name="description" value={expenseData.description} onChange={handleChange} style={{ marginRight: '10px' }} />
+          <div className="form-group">
+            <label htmlFor="description">Description:</label>
+            <input type="text" id="description" name="description" value={expenseData.description} onChange={handleChange} />
           </div>
-          <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center' }}>
-            <label htmlFor="category" style={{ marginRight: '10px' }}>Category:</label>
-            <select id="category" name="category" value={expenseData.category} onChange={handleChange} style={{ marginRight: '10px' }}>
+          <div className="form-group">
+            <label htmlFor="category">Category:</label>
+            <select id="category" name="category" value={expenseData.category} onChange={handleChange}>
               <option value="">Select category</option>
               <option value="Food">Food</option>
               <option value="Transportation">Transportation</option>
@@ -181,21 +215,26 @@ const fetchExpenses = async () => {
           <button type="submit">{isEditing ? 'Update Expense' : 'Add Expense'}</button>
         </form>
       </div>
-      <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div className="container">
         {totalAmount >= 10000 && (
-          <button onClick={handleActivatePremium} style={{ padding: '10px 20px', backgroundColor: 'gold', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+          <button onClick={handleActivatePremium} className="premium-button">
             Activate Premium
+          </button>
+        )}
+        {totalAmount >= 10000 && (
+          <button onClick={exportToCSV} className="button">
+          Download Expenses as CSV
           </button>
         )}
       </div>
       <div>
-        <ul style={{ listStyleType: 'none', padding: 0 }}>
+        <ul className="expense-list">
           {expenses.map((expense) => (
-            <li key={expense.id} style={{ marginBottom: '15px', padding: '20px', border: '1px solid #e0e0e0', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
-              <div style={{ marginBottom: '10px' }}>
+            <li key={expense.id} className={`expense-item ${isDarkTheme ? 'dark-theme' : 'light-theme'}`}>
+              <div>
                 <strong>Amount:</strong> {expense.amount}
               </div>
-              <div style={{ marginBottom: '10px' }}>
+              <div>
                 <strong>Description:</strong> {expense.description}
               </div>
               <div>
