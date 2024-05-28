@@ -7,7 +7,8 @@ const ForgotPass = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
-  const handleResetPassword = () => {
+  const handleResetPassword = (e) => {
+    e.preventDefault();
     const enteredEmail = emailRef.current.value;
     setIsLoading(true);
 

@@ -1,10 +1,12 @@
-import React ,{ useContext, useState, useEffect } from 'react'
+import React ,{ useState, useEffect, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
-import AuthContext from '../Store/auth-context'
+import { useDispatch, useSelector } from 'react-redux';
+import { authActions } from '../Store/auth';
+
 
 const Expenses = () => {
-  const authCtx = useContext(AuthContext)
   const navigate = useNavigate()
+  const dispatch = useDispatch()
   const [expenses, setExpenses] = useState([])
   const [expenseData, setExpenseData] = useState({
     amount: '',
@@ -13,7 +15,8 @@ const Expenses = () => {
   });
   const [isEditing, setIsEditing] = useState(false);
   const [currentExpenseId, setCurrentExpenseId] = useState(null);
-  const userId = authCtx.email ? authCtx.email.replace(/[@.]/g, '') : null;
+  const userId = useSelector(state => state.auth.email)?.replace(/[.@]/g, '');
+
 
   const handleChange = (e) => {
     const {name, value} = e.target
@@ -121,14 +124,24 @@ const fetchExpenses = async () => {
   };
 
   useEffect(() => {
-    fetchExpenses();
+    if (userId) {
+      fetchExpenses();
+    }
   }, [userId]);
 
    
   const handleLogout = () => {
-    authCtx.logout()
+    dispatch(authActions.logout());
     navigate('/')
   }
+
+  const totalAmount = useMemo(() => {
+    return expenses.reduce((total, expense) => total + parseFloat(expense.amount), 0);
+  }, [expenses]);
+
+  const handleActivatePremium = () => {
+    alert('Premium Activated!');
+  };
 
 
   return (
@@ -167,6 +180,13 @@ const fetchExpenses = async () => {
           </div>
           <button type="submit">{isEditing ? 'Update Expense' : 'Add Expense'}</button>
         </form>
+      </div>
+      <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        {totalAmount >= 10000 && (
+          <button onClick={handleActivatePremium} style={{ padding: '10px 20px', backgroundColor: 'gold', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+            Activate Premium
+          </button>
+        )}
       </div>
       <div>
         <ul style={{ listStyleType: 'none', padding: 0 }}>

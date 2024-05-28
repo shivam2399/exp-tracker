@@ -1,17 +1,18 @@
 import React, { useRef, useState, useContext } from 'react';
 import './Signup.css'
 import { Link, useNavigate } from 'react-router-dom';
-import AuthContext from '../Store/auth-context';
+import { useDispatch, useSelector } from 'react-redux';
+import { authActions } from '../Store/auth';
 
 
 const Signup = () => {
   const history = useNavigate();
   const emailInputRef = useRef()
   const passwordInputRef = useRef();
+  const dispatch = useDispatch();
+  const loggedIn = useSelector(state => state.auth.isLoggedIn);
 
-  const authCtx = useContext(AuthContext)
-
-  const [isLogin, setIsLogin] = useState(false);
+  const [isLogin, setIsLogin] = useState(loggedIn);
   const [isLoading, setIsLoading] = useState(false);
 
   const switchAuthModeHandler = () => {
@@ -55,7 +56,7 @@ const Signup = () => {
     }
   })
   .then((data) => {
-    authCtx.login(data.idToken)
+    dispatch(authActions.login({ token: data.idToken, email: data.email }))
     {isLogin ? history('/profile') : history('/')}
   })
   .catch((err) => {
@@ -94,11 +95,10 @@ const Signup = () => {
           {isLoading && <p>Loading...</p>}
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
-      <button type='button'onClick={switchAuthModeHandler}>{isLogin ? 'Create new account'  : 'Have an account? Login'}</button>
-      </div>
+           <button type='button'onClick={switchAuthModeHandler}>{isLogin ? 'Create new account'  : 'Have an account? Login'}</button>
+          </div>
         </form>
       </div>
-      
     </div>
   )
 }

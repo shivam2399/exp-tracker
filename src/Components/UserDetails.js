@@ -1,34 +1,36 @@
-import React, { useRef, useState, useContext, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGlobe } from "@fortawesome/free-solid-svg-icons";
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
-import AuthContext from "../Store/auth-context";
 import { useNavigate } from "react-router-dom";
+import { authActions } from "../Store/auth";
+import { useSelector, useDispatch } from "react-redux";
 
 const UserDetails = () => {
   const nameRef = useRef();
   const photoRef = useRef();
   const history = useNavigate()
-
-  const authCntx = useContext(AuthContext);
+  const dispatch = useDispatch();
+  const token = useSelector(state => state.auth.token);
+  const loggedIn = useSelector(state => state.auth.isLoggedIn)
 
   const [isLoading, setIsLoading] = useState(false);
   const [userData, setUserData] = useState({name: '', photoUrl: ''});
 
   const getUserData = () => {
-    const idToken = localStorage.getItem("token");
-    if (!idToken) {
+    if (!token) {
       alert("Please Login");
       return;
     }
 
-    const url = `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=AIzaSyDv0l7lFr3WIeezPmxlmlpxrkYc1S-Q8rM&idToken=${idToken}`;
+    const url = `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=AIzaSyDv0l7lFr3WIeezPmxlmlpxrkYc1S-Q8rM&idToken=${token}`;
 
     fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
+      body: JSON.stringify({ idToken: token}),
     })
       .then((res) => {
         if (!res.ok) {
@@ -43,7 +45,7 @@ const UserDetails = () => {
         var email = data.users[0].email
         console.log(name, photo, email);
         setUserData({name, photoUrl: photo})
-        authCntx.login(idToken, email)
+        dispatch(authActions.login({ token, email }))
       })
       .catch((err) => {
         console.error("Fetch error:", err);
@@ -61,7 +63,7 @@ const UserDetails = () => {
     fetch(url, {
       method: "POST",
       body: JSON.stringify({
-        idToken: authCntx.token,
+        idToken: token,
         displayName: enteredName,
         photoUrl: enteredPhoto,
         returnSecureToken: true,
@@ -115,7 +117,7 @@ const UserDetails = () => {
       method: 'POST',
       body: JSON.stringify({
         requestType: 'VERIFY_EMAIL',
-        idToken: authCntx.token,
+        idToken: token,
       }),
       headers: {
         'Content-Type': 'application/json',
@@ -135,7 +137,7 @@ const UserDetails = () => {
   }
 
   const logoutHandler = () => {
-    authCntx.logout()
+    dispatch(authActions.logout())
     setUserData({ name: '', photoUrl: '' });
     
   }
@@ -145,15 +147,17 @@ const UserDetails = () => {
   }
 
   useEffect(() => {
-    getUserData();
-  }, []);
+    if (loggedIn) {
+      getUserData();
+    }
+  }, [loggedIn]);
 
   return (
     <>
       <h3>Winners never quit</h3>
       <div>
         <h2>Contact Details</h2>
-        {authCntx.isLoggedIn && <button onClick={logoutHandler}>Logout</button>}
+        {loggedIn && <button onClick={logoutHandler}>Logout</button>}
         <form onSubmit={submitHandler}>
           <div className="icon-input">
             <FontAwesomeIcon icon={faGithub} />
