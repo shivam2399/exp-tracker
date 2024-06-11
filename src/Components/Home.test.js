@@ -1,4 +1,5 @@
 import Home from "./Home";
+import { render, screen } from "@testing-library/react";
 
 test('renders welcome to expense tracker', () => {
   render (<Home />)
